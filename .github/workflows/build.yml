@@ -22,12 +22,15 @@ jobs:
       - name: Test
         run: pytest -q
       - name: Build exe
-        run: >
-          pyinstaller --onefile --name spaceless
-          --collect-data wordninja
-          --hidden-import pynput.keyboard._win32
-          --hidden-import pynput.mouse._win32
-          spaceless/__main__.py
+        shell: pwsh
+        run: |
+          # wordninja is a single module whose word list sits in a sibling folder
+          $words = python -c "import os, wordninja; print(os.path.join(os.path.dirname(wordninja.__file__), 'wordninja', 'wordninja_words.txt.gz'))"
+          pyinstaller --onefile --name spaceless `
+            --add-data "${words};wordninja" `
+            --hidden-import pynput.keyboard._win32 `
+            --hidden-import pynput.mouse._win32 `
+            spaceless/__main__.py
       - name: Smoke test exe
         run: dist/spaceless.exe --selftest
       - uses: actions/upload-artifact@v4
